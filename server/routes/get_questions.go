@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"qb_pdf/config"
 	"qb_pdf/functions"
 	"strings"
@@ -35,7 +36,15 @@ func GetQuestions(c *gin.Context) {
 	sem := c.Param("sem")
 	ayId := c.Param("academic_year")
 	courseId := c.Param("courseId")
-	//
+
+	// Wildcard param includes a leading `/`, remove it
+	courseId = strings.TrimPrefix(courseId, "/")
+	courseId = strings.TrimSpace(courseId)
+	courseId = strings.Trim(courseId, "()")
+
+	fmt.Println("AY:", ayId)
+	fmt.Println("Sem:", sem)
+	fmt.Println("CourseId:", courseId)
 	data := []QuestionDetails{}
 
 	row, err := config.Database.Query(`select ac.course_name,question,answer,course_co,co_part,difficulty_level,mark,cognitive,knowledge,

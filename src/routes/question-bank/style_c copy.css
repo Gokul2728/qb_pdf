@@ -1,0 +1,132 @@
+.qp-table {
+  width: 100%;
+}
+
+.qp-table th {
+  background-color: rgb(238 241 249/1);
+}
+
+.qp-table tr,
+.qp-table th,
+.qp-table td {
+  border: 1px solid rgb(223, 223, 223);
+  padding: 5px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.qp-table td {
+  padding: 13px;
+}
+
+.qp-table tr:hover {
+  background-color: rgb(238 241 249/1);
+}
+/* .sanitized-content {
+  line-height: 20px !important;
+}
+
+.sanitized-content img {
+  margin-top: 10px;
+  width: 90%;
+  height: auto !important;
+  display: block !important;
+}
+
+.sanitized-content table td {
+  border-collapse: collapse;
+  border: 1px solid rgb(192, 192, 192);
+  padding: 5px;
+  text-align: center;
+} */
+.sanitized-content1 {
+  line-height: 20px !important; /* Set line spacing to 10px */
+  margin-left: 10px !important;
+  padding-left: 0px !important;
+  text-align: justify !important;
+  font-family: Arial !important;
+  font-weight: normal !important;
+  color: black !important;
+  font-size: 14px !important;
+  line-height: 18px;
+}
+
+.sanitized-content1 p {
+  font-family: Arial !important;
+  font-weight: normal !important;
+  color: black !important;
+  font-size: 14px !important;
+  line-height: 18px;
+}
+.sanitized-content1 span {
+  font-family: Arial !important;
+  font-weight: normal !important;
+  color: black !important;
+  font-size: 14px !important;
+  line-height: 18px;
+}
+.sanitized-content1 img {
+  /* width: 100%; */
+  /* max-width: 80% !important; */
+  max-width: 100% !important;
+
+  /* margin-right: 0px !important;
+  margin-left: 0px !important; */
+}
+.sanitized-content1 table {
+  max-width: 100% !important;
+  min-width: 100% !important;
+  table-layout: auto !important;
+  margin-top: 10px !important;
+  margin-left: 0px !important;
+  margin-bottom: 10px !important;
+  font-family: Arial !important;
+  font-weight: normal !important;
+  color: black !important;
+  font-size: 14px !important;
+  line-height: 18px;
+  width: auto !important;
+}
+
+.sanitized-content table {
+  max-width: 100% !important;
+  min-width: 100% !important;
+  table-layout: auto !important;
+  margin-top: 10px !important;
+  margin-bottom: 10px !important;
+  font-family: Arial !important;
+  font-weight: normal !important;
+  color: black !important;
+  font-size: 14px !important;
+  line-height: 18px;
+}
+
+.sanitized-content th {
+  min-width: 100% !important;
+}
+
+.sanitized-content img {
+  max-width: 100% !important;
+  text-align: center;
+  margin: auto !important;
+  margin-top: 5px !important;
+  margin-bottom: 5px !important;
+  /* width: 45% !important; Set width to 100% to ensure it is applied */
+  height: auto !important; /* Maintain aspect ratio */
+  /* display: block !important; Prevent inline-block spacing issues */
+}
+
+.sanitized-content table img {
+  margin-top: 20px !important;
+  max-width: 100% !important;
+  /* width: 35% !important; Set width to 100% to ensure it is applied */
+  height: auto !important; /* Maintain aspect ratio */
+  /* display: block !important; */
+}
+
+.sanitized-content table td {
+  border-collapse: collapse;
+  border: 1px solid rgb(192, 192, 192);
+  padding: 5px;
+  text-align: center;
+}

@@ -38,7 +38,7 @@ func main() {
 
 	r.Use(functions.RestrictOrigin)
 	//
-	r.GET(apiBaseApp+"/getcourses/:academic_year/:sem/:courseId", question.GetQuestions)
+	r.GET(apiBaseApp+"/getcourses/:academic_year/:sem/*courseId", question.GetQuestions)
 	//
 	r.NoRoute(func(c *gin.Context) {
 		functions.Response(c, 404, "API Not Found", nil)
