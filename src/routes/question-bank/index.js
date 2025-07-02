@@ -21,38 +21,81 @@ function QuestionView() {
 
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [courseOptions, setcourseOptions] = useState(null);
 
   // --- Dropdown Options ---
   // In a real application, you might fetch these from an API
   const academicYearOptions = [
-    { value: "2024 - 2025", label: "2024 - 2025" },
-    { value: "2025 - 2026", label: "2025 - 2026" },
+    { value: "2025 - 2026 (ODD)", label: "2025 - 2026 (ODD)" },
+    { value: "2025 - 2026 (EVEN)", label: "2025 - 2026 (EVEN)" },
   ];
 
-  const courseOptions = [
-    {
-      value: "(22AI302 / 22AM302 / 22CS302 / 22IT302)",
-      label: "Common Course for AI, AM, CS, IT",
-    },
-    { value: "22EC301", label: "22EC301 - Electronics" },
-    { value: "22ME305", label: "22ME305 - Mechanical" },
-  ];
+  // const courseOptions = [
+  //   {
+  //     value: "(22AI302 / 22AM302 / 22CS302 / 22IT302)",
+  //     label: "Common Course for AI, AM, CS, IT",
+  //   },
+  //   { value: "22EC301", label: "22EC301 - Electronics" },
+  //   { value: "22ME305", label: "22ME305 - Mechanical" },
+  // ];
+  const [loading, setLoading] = useState(false);
+
+  const GetCourse = async () => {
+    try {
+      setLoading(true);
+      const res = await apiGetRequest(`/getcourses`);
+      if (res.success) {
+        setcourseOptions(
+          res.data.data.map((course) => ({
+            label: `${course.course_code} - ${course.course_name}`,
+            value: course.course_code,
+          }))
+        );
+      }
+    } catch (error) {
+      console.log("Error fetching courses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   //
   const fetchAPI = async (academicYear, course) => {
-    // Return if either academic year or course is not selected
     if (!academicYear || !course) {
-      setQuestionDetails([]); // Clear existing details if selection is incomplete
+      setQuestionDetails([]);
       return;
     }
-    const combinedCourse = encodeURIComponent(course);
-    var res = await apiGetRequest(
-      `/getcourses/${academicYear}/ODD/${combinedCourse}`
-    );
-    if (res.success) {
-      setQuestionDetails(res.data.question_details);
-    } else {
-      setQuestionDetails([]); // Clear details on a failed request
+
+    // Safely extract string
+    const yearSemString =
+      typeof academicYear === "object" && academicYear !== null
+        ? academicYear.value
+        : academicYear;
+
+    if (typeof yearSemString !== "string") {
+      console.error("Invalid academic year format:", yearSemString);
+      setQuestionDetails([]);
+      return;
+    }
+
+    const match = yearSemString.match(/^(.+?)\s+\((.+)\)$/);
+    const year = match?.[1];
+    const sem = match?.[2];
+
+    const combinedCourse = encodeURIComponent(`(${course})`);
+
+    try {
+      const res = await apiGetRequest(
+        `/getQuestion/${year}/${sem}/${combinedCourse}`
+      );
+      if (res.success) {
+        setQuestionDetails(res.data.question_details);
+      } else {
+        setQuestionDetails([]);
+      }
+    } catch (err) {
+      console.error("API error", err);
+      setQuestionDetails([]);
     }
   };
 
@@ -170,8 +213,12 @@ function QuestionView() {
   };
 
   useEffect(() => {
-    // This effect will run whenever the selected academic year or course changes
-    fetchAPI(selectedAcademicYear, selectedCourse);
+    GetCourse();
+  }, []);
+  useEffect(() => {
+    if (selectedAcademicYear && selectedCourse) {
+      fetchAPI(selectedAcademicYear, selectedCourse);
+    }
   }, [selectedAcademicYear, selectedCourse]);
 
   return (
@@ -185,26 +232,25 @@ function QuestionView() {
                 label="Academic Year"
                 name="academicYear"
                 options={academicYearOptions}
-                onChange={(value) => {
-                  setSelectedAcademicYear(value);
-                  setSelectedCourse(null); // Reset course selection when year changes
-                }}
+                onChange={(value) => setSelectedAcademicYear(value)}
                 placeholder="Select Academic Year"
                 className="dropdown-container"
               />
-              <CustomDropDown
-                label="Course"
-                name="course"
-                options={courseOptions}
-                onChange={(value) => setSelectedCourse(value)}
-                placeholder="Select Course"
-                className="dropdown-container"
-              />
+              {loading ? (
+                <p>Loading Courses...</p>
+              ) : (
+                <CustomDropDown
+                  label="Course"
+                  name="course"
+                  options={courseOptions}
+                  onChange={(value) => setSelectedCourse(value)}
+                  placeholder="Select Course"
+                  className="dropdown-container"
+                />
+              )}
             </div>
           </div>
           <div className="flex justify-center">
-            {" "}
-            {/* Use justify-center for centering the paper */}
             <div
               ref={contentRef}
               className="question-paper-container" // New container class for the whole paper
@@ -243,7 +289,8 @@ function QuestionView() {
               {/* Questions Section */}
               <table className="qp-questions-table">
                 <tbody>
-                  {Array.isArray(questionDetails) && questionDetails.length > 0 ? (
+                  {Array.isArray(questionDetails) &&
+                  questionDetails.length > 0 ? (
                     questionDetails.map((q, index) => (
                       <React.Fragment key={index}>
                         <tr className="question-row">
@@ -291,8 +338,16 @@ function QuestionView() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="3" style={{ textAlign: 'center', padding: '20px',margin:"15mm" }}>
-                        Please select an academic year and a course to view the question paper.
+                      <td
+                        colSpan="3"
+                        style={{
+                          textAlign: "center",
+                          padding: "20px",
+                          margin: "15mm",
+                        }}
+                      >
+                        Please select an academic year and a course to view the
+                        question paper.
                       </td>
                     </tr>
                   )}
