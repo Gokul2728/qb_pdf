@@ -4,6 +4,7 @@ import { apiGetRequest } from "../../functions/api";
 import { useEffect, useRef, useState } from "react";
 // import AppSpinner from "../../components/spinner";
 import CustomButton from "../../components/button";
+import CustomDropDown from "../../components/custom-dropdown"; // Make sure this path is correct
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import Logo from "../../assets/img/logo.png";
@@ -14,20 +15,44 @@ function QuestionView() {
   // const navigate = useNavigate();
 
   const initialData = [];
-  const [questionDetails, setQuestionDetails] = useState(0);
+  const [questionDetails, setQuestionDetails] = useState(initialData);
   const [questionDetailsRejected, setRejectedQuestions] = useState(0);
   const contentRef = useRef();
 
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+
+  // --- Dropdown Options ---
+  // In a real application, you might fetch these from an API
+  const academicYearOptions = [
+    { value: "2024 - 2025", label: "2024 - 2025" },
+    { value: "2025 - 2026", label: "2025 - 2026" },
+  ];
+
+  const courseOptions = [
+    {
+      value: "(22AI302 / 22AM302 / 22CS302 / 22IT302)",
+      label: "Common Course for AI, AM, CS, IT",
+    },
+    { value: "22EC301", label: "22EC301 - Electronics" },
+    { value: "22ME305", label: "22ME305 - Mechanical" },
+  ];
+
   //
-  const fetchAPI = async () => {
-    const combinedCourse = encodeURIComponent(
-      "(22AI302 / 22AM302 / 22CS302 / 22IT302)"
-    );
+  const fetchAPI = async (academicYear, course) => {
+    // Return if either academic year or course is not selected
+    if (!academicYear || !course) {
+      setQuestionDetails([]); // Clear existing details if selection is incomplete
+      return;
+    }
+    const combinedCourse = encodeURIComponent(course);
     var res = await apiGetRequest(
-      `/getcourses/2025 - 2026/ODD/${combinedCourse}`
+      `/getcourses/${academicYear}/ODD/${combinedCourse}`
     );
     if (res.success) {
       setQuestionDetails(res.data.question_details);
+    } else {
+      setQuestionDetails([]); // Clear details on a failed request
     }
   };
 
@@ -145,12 +170,38 @@ function QuestionView() {
   };
 
   useEffect(() => {
-    fetchAPI();
-  }, []);
+    // This effect will run whenever the selected academic year or course changes
+    fetchAPI(selectedAcademicYear, selectedCourse);
+  }, [selectedAcademicYear, selectedCourse]);
+
   return (
     <>
       <div className="flex-row">
         <div className="bg-white w-full p-5 rounded">
+          {/* --- Dropdown Controls --- */}
+          <div className="controls-container" style={{ marginBottom: "20px" }}>
+            <div style={{ display: "flex", gap: "20px" }}>
+              <CustomDropDown
+                label="Academic Year"
+                name="academicYear"
+                options={academicYearOptions}
+                onChange={(value) => {
+                  setSelectedAcademicYear(value);
+                  setSelectedCourse(null); // Reset course selection when year changes
+                }}
+                placeholder="Select Academic Year"
+                className="dropdown-container"
+              />
+              <CustomDropDown
+                label="Course"
+                name="course"
+                options={courseOptions}
+                onChange={(value) => setSelectedCourse(value)}
+                placeholder="Select Course"
+                className="dropdown-container"
+              />
+            </div>
+          </div>
           <div className="flex justify-center">
             {" "}
             {/* Use justify-center for centering the paper */}
@@ -159,6 +210,7 @@ function QuestionView() {
               className="question-paper-container" // New container class for the whole paper
               style={{
                 width: "210mm",
+                margin: "15mm",
                 boxSizing: "border-box",
                 border: "1px solid #666",
                 display: "flex",
@@ -191,12 +243,12 @@ function QuestionView() {
               {/* Questions Section */}
               <table className="qp-questions-table">
                 <tbody>
-                  {Array.isArray(questionDetails) &&
+                  {Array.isArray(questionDetails) && questionDetails.length > 0 ? (
                     questionDetails.map((q, index) => (
                       <React.Fragment key={index}>
                         <tr className="question-row">
                           <td className="qp-cell-a-number" rowSpan={2}>
-                            A{index}
+                            A{index + 1}
                           </td>
                           <td className="qp-cell-sub-q" rowSpan={2}>
                             (i)
@@ -236,7 +288,14 @@ function QuestionView() {
                           </td>
                         </tr>
                       </React.Fragment>
-                    ))}
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3" style={{ textAlign: 'center', padding: '20px',margin:"15mm" }}>
+                        Please select an academic year and a course to view the question paper.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -247,6 +306,8 @@ function QuestionView() {
           onClick={() => {
             handleDownloadPdf();
           }}
+          // Disable button if there are no questions to prevent downloading an empty PDF
+          // disabled={!questionDetails || questionDetails.length === 0}
         />
       </div>
     </>
