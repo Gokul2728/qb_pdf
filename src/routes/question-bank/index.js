@@ -286,7 +286,6 @@ function QuestionView() {
                 </tbody>
               </table>
 
-              {/* Questions Section */}
               <table className="qp-questions-table">
                 <tbody>
                   {Array.isArray(questionDetails) &&
@@ -320,7 +319,7 @@ function QuestionView() {
                             </div>
                           </td>
                         </tr>
-                        {/* This row is for the answer, it spans the content column */}
+ 
                         <tr className="answer-row">
                           <td className="qp-cell-answer-content">
                             <h3 className="answer-heading">Answer</h3>
