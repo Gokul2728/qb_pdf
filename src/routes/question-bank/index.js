@@ -319,7 +319,7 @@ function QuestionView() {
                             </div>
                           </td>
                         </tr>
- 
+
                         <tr className="answer-row">
                           <td className="qp-cell-answer-content">
                             <h3 className="answer-heading">Answer</h3>
