@@ -97,13 +97,27 @@
 }
 
 /* Specific styles for headings within cells */
-.topic-heading,
-.answer-heading {
-  font-weight: bold;
+.topic-heading {
+  font-weight: bold; /* Keep the "Topic" label bold */
   margin-top: 15px; /* Spacing above "Topic" */
   margin-bottom: 5px;
-  font-size: 15px; /* Match main text size unless specified */
+  font-size: 15px; /* You can adjust this for the "Topic" label itself */
 }
+
+.answer-heading {
+  font-weight: bold;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-size: 15px;
+}
+
+/* Specific styles for the actual topic text (the content of the topic) */
+/* This targets the <h2> element with class 'font-medium' within the question content cell */
+.qp-cell-question-content .font-medium {
+  font-weight: normal !important; /* Set to normal to remove boldness, !important to override */
+  font-size: 16px; /* You can change '14px' to any size you prefer (e.g., 12px, 16px, 1em) */
+}
+
 
 .sanitized-content {
   text-align: justify !important;

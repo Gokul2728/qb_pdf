@@ -1,8 +1,7 @@
-import React from "react";
-// import { useNavigate, useParams } from "react-router-dom";
-import { apiGetRequest } from "../../functions/api";
-import { useEffect, useRef, useState } from "react";
-// import AppSpinner from "../../components/spinner";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+// import { useNavigate, useParams } from "react-router-dom"; // Commented out as not used
+// import { apiGetRequest } from "../../functions/api"; // Commented out as not used for static data
+// import AppSpinner from "../../components/spinner"; // Commented out as not used
 import CustomButton from "../../components/button";
 import CustomDropDown from "../../components/custom-dropdown"; // Make sure this path is correct
 import jsPDF from "jspdf";
@@ -11,12 +10,84 @@ import Logo from "../../assets/img/logo.png";
 import DOMPurify from "dompurify";
 import "./style.css";
 
+// Static Data for Questions - Moved outside the component to avoid recreation on every render
+const staticQuestions = [
+  {
+    course_name: "DATA STRUCTURES I",
+    question:
+      "<p>A software developer is implementing a binary search algorithm to quickly find user names in an ordered array of a large customer database. To evaluate the performance of the search, they count the number of comparisons made during execution. This helps determine how efficiently the algorithm runs as the dataset grows. Pick out the type of complexity measured by counting the number of key operations like comparisons. It is critical in evaluating sorting and searching algorithms.</p><p>a) Time complexity</p><p>b) Space complexity</p><p>c) Memory complexity</p><p>d) data complexity<br></p>",
+    answer: "<p>a) Time complexity</p>",
+    course_co: "CO1",
+    co_part: "A",
+    difficulty_level: "Easy - 1",
+    mark: "1",
+    cognitive: "Understand - U",
+    knowledge: "Conceptual - C",
+    remark_category: "",
+    remarks: "",
+    status: "1",
+    topic: "4 - Searching in Arrays and Ordered Arrays",
+    rdt: "R",
+  },
+  {
+    course_name: "DATA STRUCTURES I",
+    question:
+      "<p>In a student information system, multiple student records—each containing fields like name, ID, and marks—are stored together in a single collection for easy retrieval and management. This collection groups records of the same entity type, enabling efficient access to structured data, similar to what is found in database systems. Identify the structure where a collection of records of the same entity type is grouped together. It is fundamental for database-style storage.</p><p>a) Group item</p><p>b) File</p><p>c) Record</p><p>d) Field<br></p>",
+    answer: "<p>b) File</p>",
+    course_co: "CO1",
+    co_part: "A",
+    difficulty_level: "Easy - 1",
+    mark: "1",
+    cognitive: "Understand - U",
+    knowledge: "Conceptual - C",
+    remark_category: "Others",
+    remarks: "Need to remove unwanted symbols __ in the scenario",
+    status: "3",
+    topic: "1 - Data Structures Hierarchy",
+    rdt: "R",
+  },
+  {
+    course_name: "DATA STRUCTURES I",
+    question:
+      "<p>A developer is optimizing an application designed for mobile devices with limited memory. While reviewing different algorithms, the developer focuses on how much memory is required while the algorithm runs, to ensure it fits within hardware constraints. Pick out the factor that decides how much memory an algorithm needs during its execution.</p><p>a) Input size only</p><p>b) CPU speed</p><p>c) Space complexity</p><p>d) Compilation time<br></p>",
+    answer: "<p>c) Space complexity</p>",
+    course_co: "CO1",
+    co_part: "A",
+    difficulty_level: "Easy - 1",
+    mark: "1",
+    cognitive: "Analyze - An",
+    knowledge: "Conceptual - C",
+    remark_category: "",
+    remarks: "",
+    status: "1",
+    topic: "1 - Data Structures Hierarchy",
+    rdt: "R",
+  },
+  {
+    course_name: "DATA STRUCTURES I",
+    question:
+      "<p>A team of developers is documenting a sorting algorithm to share with programmers using different programming languages like Python, Java, and C++. To ensure the algorithm can be adopted without rewriting the core logic for each language, they use a format that outlines logical steps without relying on any programming syntax. Find the property that makes an algorithm language independent.&nbsp;</p><p>a) Plain logical steps</p><p>b) Syntax-specific structure</p><p>c) Pseudocode dependent</p><p>d) Fixed programming language</p>",
+    answer: "<p>a) Plain logical steps</p>",
+    course_co: "CO1",
+    co_part: "A",
+    difficulty_level: "Easy - 1",
+    mark: "1",
+    cognitive: "Understand - U",
+    knowledge: "Conceptual - C",
+    remark_category: "",
+    remarks: "",
+    status: "1",
+    topic: "1 - Data Structures Hierarchy",
+    rdt: "R",
+  },
+];
+
 function QuestionView() {
-  // const navigate = useNavigate();
+  // const navigate = useNavigate(); // Not used
 
   const initialData = [];
   const [questionDetails, setQuestionDetails] = useState(initialData);
-  const [questionDetailsRejected, setRejectedQuestions] = useState(0);
+  // const [questionDetailsRejected, setRejectedQuestions] = useState(0); // Removed as not used
   const contentRef = useRef();
 
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
@@ -24,80 +95,60 @@ function QuestionView() {
   const [courseOptions, setcourseOptions] = useState(null);
 
   // --- Dropdown Options ---
-  // In a real application, you might fetch these from an API
   const academicYearOptions = [
     { value: "2025 - 2026 (ODD)", label: "2025 - 2026 (ODD)" },
     { value: "2025 - 2026 (EVEN)", label: "2025 - 2026 (EVEN)" },
   ];
 
-  // const courseOptions = [
-  //   {
-  //     value: "(22AI302 / 22AM302 / 22CS302 / 22IT302)",
-  //     label: "Common Course for AI, AM, CS, IT",
-  //   },
-  //   { value: "22EC301", label: "22EC301 - Electronics" },
-  //   { value: "22ME305", label: "22ME305 - Mechanical" },
-  // ];
   const [loading, setLoading] = useState(false);
 
   const GetCourse = async () => {
-    try {
-      setLoading(true);
-      const res = await apiGetRequest(`/getcourses`);
-      if (res.success) {
-        setcourseOptions(
-          res.data.data.map((course) => ({
-            label: `${course.course_code} - ${course.course_name}`,
-            value: course.course_code,
-          }))
-        );
-      }
-    } catch (error) {
-      console.log("Error fetching courses:", error);
-    } finally {
+    setLoading(true);
+    setTimeout(() => {
+      setcourseOptions([
+        {
+          value: "Common Course for AI, AM, CS, IT",
+          label: "Common Course for AI, AM, CS, IT",
+        },
+        { value: "22EC301", label: "22EC301 - Electronics" },
+        { value: "22ME305", label: "22ME305 - Mechanical" },
+        { value: "DATA STRUCTURES I", label: "DS101 - DATA STRUCTURES I" },
+      ]);
       setLoading(false);
-    }
+    }, 500);
   };
 
-  //
-  const fetchAPI = async (academicYear, course) => {
-    if (!academicYear || !course) {
-      setQuestionDetails([]);
-      return;
-    }
-
-    // Safely extract string
-    const yearSemString =
-      typeof academicYear === "object" && academicYear !== null
-        ? academicYear.value
-        : academicYear;
-
-    if (typeof yearSemString !== "string") {
-      console.error("Invalid academic year format:", yearSemString);
-      setQuestionDetails([]);
-      return;
-    }
-
-    const match = yearSemString.match(/^(.+?)\s+\((.+)\)$/);
-    const year = match?.[1];
-    const sem = match?.[2];
-
-    const combinedCourse = encodeURIComponent(`(${course})`);
-
-    try {
-      const res = await apiGetRequest(
-        `/getQuestion/${year}/${sem}/${combinedCourse}`
-      );
-      if (res.success) {
-        setQuestionDetails(res.data.question_details);
-      } else {
+  // Wrapped fetchAPI in useCallback to stabilize it for useEffect dependency
+  const fetchAPI = useCallback(
+    async (academicYear, course) => {
+      if (!academicYear || !course) {
         setQuestionDetails([]);
+        return;
       }
-    } catch (err) {
-      console.error("API error", err);
-      setQuestionDetails([]);
-    }
-  };
+
+      const yearSemString =
+        typeof academicYear === "object" && academicYear !== null
+          ? academicYear.value
+          : academicYear;
+
+      if (typeof yearSemString !== "string") {
+        console.error("Invalid academic year format:", yearSemString);
+        setQuestionDetails([]);
+        return;
+      }
+
+      const selectedCourseValue =
+        typeof course === "object" && course !== null ? course.value : course;
+
+      // Filter staticQuestions directly by course_name matching selectedCourseValue
+      const filteredQuestions = staticQuestions.filter(
+        (q) => q.course_name === selectedCourseValue
+      );
+
+      setQuestionDetails(filteredQuestions);
+    },
+    [setQuestionDetails] // setQuestionDetails is a stable function provided by React
+  );
 
   const handleDownloadPdf = async () => {
     const content = contentRef.current;
@@ -154,7 +205,6 @@ function QuestionView() {
 
     pdf.save("download.pdf");
   };
-  //
 
   const sanitizedHTML = (question) => {
     return DOMPurify.sanitize(question, {
@@ -214,12 +264,13 @@ function QuestionView() {
 
   useEffect(() => {
     GetCourse();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
+
   useEffect(() => {
     if (selectedAcademicYear && selectedCourse) {
       fetchAPI(selectedAcademicYear, selectedCourse);
     }
-  }, [selectedAcademicYear, selectedCourse]);
+  }, [selectedAcademicYear, selectedCourse, fetchAPI]); // Added fetchAPI to dependency array
 
   return (
     <>
@@ -253,7 +304,7 @@ function QuestionView() {
           <div className="flex justify-center">
             <div
               ref={contentRef}
-              className="question-paper-container" // New container class for the whole paper
+              className="question-paper-container"
               style={{
                 width: "210mm",
                 margin: "15mm",
@@ -309,17 +360,19 @@ function QuestionView() {
                             {q.topic && (
                               <>
                                 <h1 className="topic-heading">Topic</h1>
-                                <h2 className="font-medium ">{q.topic}</h2>
+                                <h3 className="font-medium ">{q.topic}</h3>
                               </>
                             )}
                             <div className="mark-section">
+                              {/* UPDATED LINE HERE TO MATCH YOUR DESIRED FORMAT */}
                               <h2 className="mark-text">
-                                ({q.mark} Mark{q.mark > 1 ? "s" : ""} {q.rdt})
+                                {q.course_co} - {q.co_part} ({q.mark})<br />
+                                {q.cognitive}
                               </h2>
                             </div>
                           </td>
                         </tr>
- 
+
                         <tr className="answer-row">
                           <td className="qp-cell-answer-content">
                             <h3 className="answer-heading">Answer</h3>
